@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+.npm/
+
+# Build outputs
+client/dist/
+
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example
+*.pem
+serviceAccountKey.json
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# MacOS
+.DS_Store
+
+# Temporary Files
+npm-debug.log
+yarn-error.log
+client/.eslintcache
