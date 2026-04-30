@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useEditorStore } from '../../stores/editorStore';
-import { ChevronRight, ChevronDown, FileCode, FolderOpen, Search } from 'lucide-react';
+import { ChevronRight, ChevronDown, FileCode, FolderOpen, Search, Plus, X, Check } from 'lucide-react';
+import { useToastStore } from '../../stores/toastStore';
 
 const extColors = {
   cpp: 'text-blue-400', c: 'text-blue-400', h: 'text-blue-300',
@@ -11,10 +12,35 @@ const extColors = {
 };
 
 export default function FileExplorer() {
-  const { files, activeFile, openFile } = useEditorStore();
+  const { files, activeFile, openFile, createFile, submitted } = useEditorStore();
+  const toast = useToastStore();
   const [search, setSearch] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  const [newFileName, setNewFileName] = useState('');
+  const inputRef = useRef(null);
+  
   const allFiles = Object.keys(files);
 
+  useEffect(() => {
+    if (isCreating && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isCreating]);
+
+  const handleCreateFile = () => {
+    if (!newFileName.trim()) {
+      setIsCreating(false);
+      return;
+    }
+
+    const success = createFile(newFileName.trim());
+    if (success) {
+      setIsCreating(false);
+      setNewFileName('');
+    } else {
+      toast.error('File already exists');
+    }
+  };
   const filtered = search
     ? allFiles.filter(f => f.toLowerCase().includes(search.toLowerCase()))
     : allFiles;
@@ -22,8 +48,17 @@ export default function FileExplorer() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider border-b border-border">
-        Explorer
+      <div className="px-4 py-3 flex items-center justify-between border-b border-border">
+        <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Explorer</span>
+        {!submitted && (
+          <button 
+            onClick={() => setIsCreating(true)}
+            className="p-1 hover:bg-bg-tertiary rounded-md text-text-muted hover:text-text-primary transition-colors"
+            title="New File"
+          >
+            <Plus size={14} />
+          </button>
+        )}
       </div>
 
       {/* Search */}
@@ -48,6 +83,27 @@ export default function FileExplorer() {
             <FolderOpen size={12} className="text-accent-blue" />
             <span className="font-medium">exam-files</span>
           </div>
+
+          {/* Create File Input */}
+          {isCreating && (
+            <div className="px-2 py-1 flex items-center gap-2">
+              <FileCode size={13} className="text-text-muted" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={newFileName}
+                onChange={(e) => setNewFileName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleCreateFile();
+                  if (e.key === 'Escape') setIsCreating(false);
+                }}
+                onBlur={handleCreateFile}
+                placeholder="filename.ext"
+                className="flex-1 min-w-0 bg-bg-tertiary text-xs text-text-primary border border-accent-blue/50 rounded px-1.5 py-1 focus:outline-none"
+              />
+            </div>
+          )}
+
           {filtered.map(file => {
             const ext = file.split('.').pop().toLowerCase();
             const color = extColors[ext] || 'text-gray-400';
@@ -71,7 +127,7 @@ export default function FileExplorer() {
               </button>
             );
           })}
-          {filtered.length === 0 && (
+          {filtered.length === 0 && !isCreating && (
             <p className="px-6 py-4 text-xs text-text-muted text-center">No files found</p>
           )}
         </div>

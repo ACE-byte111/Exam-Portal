@@ -164,6 +164,23 @@ export const useEditorStore = create((set, get) => ({
     });
   },
 
+  createFile: (filename) => {
+    const { files, dirty, openFiles } = get();
+    if (files[filename]) return false;
+
+    const newFiles = { ...files, [filename]: '' };
+    const newDirty = { ...dirty, [filename]: true };
+    const newOpen = [...openFiles, filename];
+
+    set({
+      files: newFiles,
+      dirty: newDirty,
+      openFiles: newOpen,
+      activeFile: filename,
+    });
+    return true;
+  },
+
   setSubmitted: () => set({ submitted: true, locked: true }),
   setLocked: () => set({ locked: true }),
   setConnected: (connected) => set({ connected }),
