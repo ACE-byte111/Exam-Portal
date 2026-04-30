@@ -46,10 +46,12 @@ router.post('/send-otp', async (req, res) => {
   otpCache.set(email, { otp, expiresAt: Date.now() + 5 * 60 * 1000 });
 
   const transporter = createTransporter();
+  console.log(`[OTP] Attempting to send OTP to ${email}. Transporter ready: ${!!transporter}`);
   
   if (transporter) {
     try {
-      await transporter.sendMail({
+      console.log(`[OTP] Sending email via ${process.env.EMAIL_USER}...`);
+      const info = await transporter.sendMail({
         from: `"Exam Portal Support" <${process.env.EMAIL_USER}>`,
         to: email,
         subject: 'Your Exam Portal OTP',
@@ -62,13 +64,14 @@ router.post('/send-otp', async (req, res) => {
           </div>
         `
       });
-      console.log(`[OTP] Dispatched real email to ${email}`);
+      console.log(`[OTP] Success! Message ID: ${info.messageId}`);
     } catch (err) {
-      console.error(`[OTP] Failed to send email to ${email}:`, err.message);
-      console.log(`[EMERGENCY] Email failed! Here is the OTP for ${email}: ${otp}`);
+      console.error(`[OTP] SMTP Error:`, err.message);
+      console.log(`[EMERGENCY] Here is your OTP: ${otp}`);
     }
   } else {
-    console.log(`[OTP] No email credentials found in .env! Printing OTP for ${email}: ${otp}`);
+    console.error(`[OTP] ERROR: No EMAIL_USER or EMAIL_PASS found in Render environment variables!`);
+    console.log(`[EMERGENCY] Here is your OTP: ${otp}`);
   }
 
   res.json({ message: 'OTP processed. Please enter it to continue.' });
