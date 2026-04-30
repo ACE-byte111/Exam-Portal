@@ -2,7 +2,13 @@ const express = require('express');
 const crypto = require('crypto');
 const firestore = require('../services/firestoreService');
 const nodemailer = require('nodemailer');
+const dns = require('dns');
 const router = express.Router();
+
+// Force IPv4 for Render compatibility (fixes ENETUNREACH on IPv6)
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
 const { requireAuth } = require('../middleware/auth');
 
 // Temporary in-memory store for OTPs (In prod use Redis or Firestore TTL)
