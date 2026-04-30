@@ -7,6 +7,7 @@ const variants = {
   success: 'bg-accent-green hover:bg-accent-green/80 text-white',
   ghost: 'bg-transparent hover:bg-bg-tertiary text-text-secondary hover:text-text-primary',
   outline: 'bg-transparent border border-border hover:bg-bg-tertiary text-text-primary',
+  white: 'bg-white hover:bg-gray-100 text-black shadow-md',
 };
 
 const sizes = {

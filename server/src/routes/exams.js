@@ -12,10 +12,32 @@ router.get('/', requireAuth, async (req, res) => {
   res.json({ exams: allExams });
 });
 
+const githubService = require('../services/githubService');
+
+// ... (other routes)
+
 // Create exam
 router.post('/', requireAuth, requireInstructor, async (req, res) => {
   const { title, course, duration, allowedExtensions, fullscreenRequired, repoTemplate, starterFiles } = req.body;
   
+  let finalStarterFiles = starterFiles || {};
+
+  // Auto-clone logic if GitHub repo is provided
+  if (repoTemplate) {
+    try {
+      const repoInfo = githubService.parseGitHubUrl(repoTemplate);
+      if (repoInfo) {
+        console.log(`[GitHub] Fetching template from ${repoInfo.owner}/${repoInfo.repo}...`);
+        const githubFiles = await githubService.fetchRepoContents(repoInfo.owner, repoInfo.repo);
+        finalStarterFiles = { ...githubFiles, ...finalStarterFiles }; // Manual files take precedence
+        console.log(`[GitHub] Successfully fetched ${Object.keys(githubFiles).length} files.`);
+      }
+    } catch (err) {
+      console.error(`[GitHub] Failed to fetch repo:`, err.message);
+      // We don't fail the whole creation, but we could return a warning
+    }
+  }
+
   const newExam = {
     id: crypto.randomUUID(),
     title,
@@ -24,7 +46,7 @@ router.post('/', requireAuth, requireInstructor, async (req, res) => {
     allowedExtensions,
     fullscreenRequired,
     repoTemplate,
-    starterFiles: starterFiles || {},
+    starterFiles: finalStarterFiles,
     status: 'draft',
     createdAt: new Date().toISOString()
   };

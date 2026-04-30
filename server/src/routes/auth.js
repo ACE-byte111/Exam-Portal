@@ -68,42 +68,48 @@ router.post('/send-otp', async (req, res) => {
 });
 
 router.post('/verify-otp', async (req, res) => {
-  const { email, otp } = req.body;
-  
-  const cached = otpCache.get(email);
-  if (!cached || cached.otp !== otp || Date.now() > cached.expiresAt) {
-    // If it's a demo account and they used 123456 prior to starting the cache, we can forgive for the demo
-    const isDemoAccount = ['instructor@university.edu', 'student1@university.edu'].includes(email);
-    if (!(isDemoAccount && otp === '123456')) {
-      return res.status(401).json({ error: 'Invalid or expired OTP' });
+  try {
+    const { email, otp } = req.body;
+    
+    const cached = otpCache.get(email);
+    if (!cached || cached.otp !== otp || Date.now() > cached.expiresAt) {
+      // If it's a demo account and they used 123456 prior to starting the cache, we can forgive for the demo
+      const isDemoAccount = ['instructor@university.edu', 'student1@university.edu'].includes(email);
+      if (!(isDemoAccount && otp === '123456')) {
+        return res.status(401).json({ error: 'Invalid or expired OTP' });
+      }
     }
+
+    // OTP is correct! Determine strict role.
+    const instructorEmail = process.env.INSTRUCTOR_EMAIL || 'instructor@university.edu';
+    const role = (email === instructorEmail) ? 'instructor' : 'student';
+
+    // Create or Update User Database Record
+    let user = await firestore.getUser(email);
+    if (!user) {
+      user = {
+        id: crypto.randomUUID(),
+        email,
+        name: email.split('@')[0],
+        role,
+        createdAt: new Date().toISOString()
+      };
+      await firestore.createUser(user);
+    } else if (user.role !== role) {
+      // Force role update if backend .env changed
+      user.role = role;
+      await firestore.createUser(user); // Update existing
+    }
+
+    // Clear cache after successful use
+    otpCache.delete(email);
+
+    const token = generateToken({ id: user.id, email: user.email, role: user.role, name: user.name });
+    res.json({ user, token });
+  } catch (err) {
+    console.error('Error verifying OTP:', err);
+    res.status(500).json({ error: 'Database error: ' + err.message });
   }
-
-  // OTP is correct! Determine strict role.
-  const instructorEmail = process.env.INSTRUCTOR_EMAIL || 'instructor@university.edu';
-  const role = (email === instructorEmail) ? 'instructor' : 'student';
-
-  // Create or Update User Database Record
-  let user = await firestore.getUser(email);
-  if (!user) {
-    user = {
-      id: crypto.randomUUID(),
-      email,
-      name: email.split('@')[0],
-      role,
-      createdAt: new Date().toISOString()
-    };
-    await firestore.createUser(user);
-  } else if (user.role !== role) {
-    // Force role update if backend .env changed
-    user.role = role;
-  }
-
-  // Clear cache after successful use
-  otpCache.delete(email);
-
-  const token = generateToken({ id: user.id, email: user.email, role: user.role, name: user.name });
-  res.json({ user, token });
 });
 
 router.get('/me', requireAuth, async (req, res) => {

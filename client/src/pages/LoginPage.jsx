@@ -36,13 +36,25 @@ export default function LoginPage() {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const userEmail = result.user.email;
-      setEmail(userEmail); // Save for OTP verification
+      
+      if (!userEmail) {
+        throw new Error('Google did not provide an email address.');
+      }
+
+      setEmail(userEmail);
+      
+      // We call sendOtp from the store
       await sendOtp(userEmail);
-      if (!useAuthStore.getState().error) {
+      
+      const currentError = useAuthStore.getState().error;
+      if (currentError) {
+        showError(`Server Error: ${currentError}`);
+      } else {
         success('Verified! OTP has been sent for final confirmation.');
       }
     } catch (err) {
-      showError('Google Sign-In failed: ' + err.message);
+      console.error('Login Error:', err);
+      showError('Login failed: ' + (err.message || 'Unknown error'));
     } finally {
       setSending(false);
     }
@@ -94,9 +106,10 @@ export default function LoginPage() {
 
               <Button
                 type="button"
+                variant="white"
                 onClick={handleGoogleLogin}
                 loading={sending}
-                className="w-full bg-white text-black hover:bg-gray-100 flex items-center justify-center gap-3"
+                className="w-full flex items-center justify-center gap-3"
                 size="lg"
               >
                 {!sending && (
