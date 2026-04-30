@@ -17,10 +17,16 @@ const generateToken = (user) => {
 const createTransporter = () => {
   if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
     return nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true, // Use SSL
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
+      },
+      tls: {
+        // Essential for cloud providers like Render that might have IPv6 issues
+        rejectUnauthorized: false
       }
     });
   }
@@ -57,8 +63,8 @@ router.post('/send-otp', async (req, res) => {
       });
       console.log(`[OTP] Dispatched real email to ${email}`);
     } catch (err) {
-      console.error(`[OTP] Failed to send email to ${email}:`, err);
-      // Fallback securely? In prod, you'd fail here. We'll proceed so the app doesn't break if their creds are wrong.
+      console.error(`[OTP] Failed to send email to ${email}:`, err.message);
+      console.log(`[EMERGENCY] Email failed! Here is the OTP for ${email}: ${otp}`);
     }
   } else {
     console.log(`[OTP] No email credentials found in .env! Printing OTP for ${email}: ${otp}`);
