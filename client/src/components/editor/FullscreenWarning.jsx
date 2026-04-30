@@ -1,7 +1,7 @@
 import { Shield, AlertTriangle } from 'lucide-react';
 import Button from '../Button';
 
-export default function FullscreenWarning({ countdown, onReturn }) {
+export default function FullscreenWarning({ countdown, violations, onReturn }) {
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/80 backdrop-blur-md animate-fade-in">
       <div className="text-center max-w-md mx-4 animate-slide-up">
@@ -11,11 +11,24 @@ export default function FullscreenWarning({ countdown, onReturn }) {
         </div>
 
         <h2 className="text-2xl font-bold text-white mb-2">
-          Fullscreen Required
+          {violations >= 2 ? 'FINAL WARNING' : 'Fullscreen Required'}
         </h2>
-        <p className="text-text-secondary mb-6">
-          You have exited fullscreen mode. Return to fullscreen to continue your exam.
+        <p className="text-text-secondary mb-4">
+          You have exited fullscreen or clicked away. Return to continue.
         </p>
+
+        {/* Strike counter */}
+        <div className="flex justify-center gap-2 mb-6">
+          {[1, 2, 3].map(i => (
+            <div 
+              key={i}
+              className={`w-10 h-2 rounded-full ${i <= violations ? 'bg-accent-red' : 'bg-white/20'}`}
+            />
+          ))}
+          <span className="text-[10px] uppercase font-bold text-accent-red ml-2 tracking-widest">
+            Strike {violations}/3
+          </span>
+        </div>
 
         {/* Countdown */}
         <div className="mb-6">

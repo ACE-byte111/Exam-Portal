@@ -40,6 +40,7 @@ export const useEditorStore = create((set, get) => ({
   examEndTime: null,
   submitted: false,
   locked: false,
+  internalClipboard: '',
 
   // Connection
   connected: true,

@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { useEditorStore } from '../../stores/editorStore';
 import {
   Send, Clock, PanelLeftClose, PanelLeft, History, Settings,
-  Sun, Moon, Type, Map, WrapText, Minus, Plus
+  Sun, Moon, Type, Map, WrapText, Minus, Plus, Play
 } from 'lucide-react';
 import Button from '../Button';
 import Badge from '../Badge';
 
-export default function EditorToolbar({ examTitle, endTime, onSubmit, submitted, sidebarOpen, onToggleSidebar }) {
+export default function EditorToolbar({ examTitle, endTime, onSubmit, submitted, onRun, running, sidebarOpen, onToggleSidebar }) {
   const { theme, fontSize, toggleTheme, toggleHistory, showHistory,
     toggleMinimap, toggleWordWrap, setFontSize, minimap, wordWrap } = useEditorStore();
   const [timeLeft, setTimeLeft] = useState('');
@@ -121,6 +121,17 @@ export default function EditorToolbar({ examTitle, endTime, onSubmit, submitted,
         </button>
 
         <div className="h-5 w-px bg-border" />
+
+        <Button
+          size="sm"
+          variant="success"
+          icon={Play}
+          onClick={onRun}
+          loading={running}
+          disabled={submitted || running}
+        >
+          Run
+        </Button>
 
         <Button
           size="sm"

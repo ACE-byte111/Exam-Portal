@@ -19,6 +19,7 @@ import useAutosave from '../hooks/useAutosave';
 import useFullscreen from '../hooks/useFullscreen';
 import useAntiCheat from '../hooks/useAntiCheat';
 import Loader from '../components/Loader';
+import OutputPanel from '../components/editor/OutputPanel';
 
 export default function ExamEditor() {
   const { id: examId } = useParams();
@@ -34,6 +35,14 @@ export default function ExamEditor() {
   const [showRecovery, setShowRecovery] = useState(false);
   const [recoveryData, setRecoveryData] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [output, setOutput] = useState(null);
+  const [stdin, setStdin] = useState('');
+  const [running, setRunning] = useState(false);
+  const [showOutputPanel, setShowOutputPanel] = useState(false);
+
+  const handleAutoSubmit = useCallback(() => {
+    handleSubmit('fullscreen_timeout');
+  }, [examId, store.files, store.saveCount]);
 
   const {
     isFullscreen,
@@ -45,7 +54,7 @@ export default function ExamEditor() {
     violations,
   } = useFullscreen({
     enabled: exam?.fullscreenRequired,
-    onAutoSubmit: () => handleSubmit('fullscreen_timeout'),
+    onAutoSubmit: handleAutoSubmit,
     examId,
     studentId: user?.id,
   });
@@ -97,6 +106,55 @@ export default function ExamEditor() {
       navigate('/dashboard');
     }
   };
+
+  // Sync code with instructor
+  useEffect(() => {
+    if (!store.examId || store.submitted) return;
+
+    const syncInterval = setInterval(() => {
+      socket.emit('student:code-update', {
+        examId: store.examId,
+        studentId: store.user?.id,
+        files: store.files,
+        activeFile: store.activeFile
+      });
+    }, 30000); // Every 30 seconds
+
+    return () => clearInterval(syncInterval);
+  }, [store.examId, store.files, store.activeFile, store.submitted]);
+
+  const handleRunCode = async () => {
+    if (!store.activeFile) {
+      toast.warning('Please select a file to run');
+      return;
+    }
+
+    const content = store.files[store.activeFile];
+    if (!content) return;
+
+    setRunning(true);
+    setShowOutputPanel(true);
+    setOutput(null); // Clear previous output
+    
+    // Immediate sync on run
+    socket.emit('student:code-update', {
+      examId: store.examId,
+      studentId: store.user?.id,
+      files: store.files,
+      activeFile: store.activeFile
+    });
+
+    try {
+      const result = await api.runCode(store.activeFile, content, stdin);
+      setOutput(result);
+    } catch (err) {
+      toast.error('Execution failed: ' + err.message);
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  const handleClearOutput = () => setOutput(null);
 
   const initEditor = (examData, recoveredData) => {
     const starterFiles = examData.starterFiles || { 'main.cpp': '// Start coding here\n' };
@@ -199,6 +257,8 @@ export default function ExamEditor() {
         examTitle={store.examTitle}
         endTime={store.examEndTime}
         onSubmit={() => setShowSubmitConfirm(true)}
+        onRun={handleRunCode}
+        running={running}
         submitted={store.submitted}
         sidebarOpen={sidebarOpen}
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
@@ -229,6 +289,18 @@ export default function ExamEditor() {
         )}
       </div>
 
+      {/* Output Panel */}
+      {(showOutputPanel || output || running) && (
+        <OutputPanel
+          output={output}
+          loading={running}
+          stdin={stdin}
+          setStdin={setStdin}
+          onClose={() => setShowOutputPanel(false)}
+          onClear={handleClearOutput}
+        />
+      )}
+
       {/* Status Bar */}
       <EditorStatusBar violations={violations} />
 
@@ -251,6 +323,7 @@ export default function ExamEditor() {
       {showWarning && (
         <FullscreenWarning
           countdown={countdown}
+          violations={violations}
           onReturn={enterFullscreen}
         />
       )}

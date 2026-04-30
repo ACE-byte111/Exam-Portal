@@ -5,16 +5,26 @@ import Editor from '@monaco-editor/react';
 import Button from '../components/Button';
 import Loader from '../components/Loader';
 import Badge from '../components/Badge';
-import { ChevronLeft, Users, FileCode, Clock, FileJson } from 'lucide-react';
+import OutputPanel from '../components/editor/OutputPanel';
+import { useToastStore } from '../stores/toastStore';
+import { ChevronLeft, Users, FileCode, Clock, FileJson, Play, Terminal as TerminalIcon } from 'lucide-react';
 
 export default function InstructorSubmissions() {
   const { id: examId } = useParams();
   const navigate = useNavigate();
+  const toast = useToastStore();
+  
   const [loading, setLoading] = useState(true);
   const [exam, setExam] = useState(null);
   const [submissions, setSubmissions] = useState([]);
   const [activeSubmission, setActiveSubmission] = useState(null);
   const [activeFile, setActiveFile] = useState('');
+  
+  // Execution state
+  const [running, setRunning] = useState(false);
+  const [output, setOutput] = useState(null);
+  const [stdin, setStdin] = useState('');
+  const [showConsole, setShowConsole] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -40,9 +50,28 @@ export default function InstructorSubmissions() {
 
   const selectSubmission = (sub) => {
     setActiveSubmission(sub);
+    setOutput(null);
     if (sub && sub.files) {
       const files = Object.keys(sub.files);
       if (files.length > 0) setActiveFile(files[0]);
+    }
+  };
+
+  const handleRunCode = async () => {
+    if (!activeFile || !activeSubmission) return;
+    const content = activeSubmission.files[activeFile];
+    if (!content) return;
+
+    setRunning(true);
+    setShowConsole(true); // Ensure console is visible when running
+    setOutput(null);
+    try {
+      const result = await api.runCode(activeFile, content, stdin);
+      setOutput(result);
+    } catch (err) {
+      toast.error('Execution failed: ' + err.message);
+    } finally {
+      setRunning(false);
     }
   };
 
@@ -53,13 +82,34 @@ export default function InstructorSubmissions() {
       {/* Header */}
       <header className="h-14 border-b border-border bg-bg-primary flex items-center px-4 shrink-0">
         <Button variant="ghost" size="sm" icon={ChevronLeft} onClick={() => navigate('/instructor')}>
-          Back to Dashboard
+          Back
         </Button>
         <div className="mx-4 h-6 w-px bg-border" />
         <h1 className="font-semibold text-text-primary truncate">
-          Submissions: <span className="text-accent-blue">{exam?.title || 'Unknown Exam'}</span>
+          Reviewing: <span className="text-accent-blue">{exam?.title || 'Unknown'}</span>
         </h1>
         <div className="ml-auto flex items-center gap-3">
+          {activeSubmission && (
+            <>
+              <Button 
+                size="sm" 
+                variant="secondary" 
+                icon={TerminalIcon} 
+                onClick={() => setShowConsole(!showConsole)}
+              >
+                {showConsole ? 'Hide Console' : 'Show Console'}
+              </Button>
+              <Button 
+                size="sm" 
+                variant="success" 
+                icon={Play} 
+                onClick={handleRunCode}
+                loading={running}
+              >
+                Run Code
+              </Button>
+            </>
+          )}
           <Badge variant="success">{submissions.length} Submissions</Badge>
         </div>
       </header>
@@ -68,10 +118,10 @@ export default function InstructorSubmissions() {
         {/* Sidebar */}
         <div className="w-64 border-r border-border bg-bg-secondary flex flex-col shrink-0">
           <div className="p-4 border-b border-border text-xs font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-2">
-            <Users size={14} /> Submitted Students
+            <Users size={14} /> Student Submissions
           </div>
           <div className="flex-1 overflow-auto">
-            {submissions.map((sub, i) => (
+            {submissions.map((sub) => (
               <button
                 key={sub.id}
                 onClick={() => selectSubmission(sub)}
@@ -79,20 +129,20 @@ export default function InstructorSubmissions() {
                   ${activeSubmission?.id === sub.id ? 'bg-accent-blue/10 border-l-2 border-l-accent-blue' : 'border-l-2 border-l-transparent'}
                 `}
               >
-                <div className="font-medium text-text-primary truncate">{sub.studentId}</div>
-                <div className="text-xs text-text-muted mt-1 flex items-center gap-1">
+                <div className="font-bold text-text-primary truncate">
+                  {sub.studentName || (sub.studentEmail ? sub.studentEmail.split('@')[0] : sub.studentId)}
+                </div>
+                <div className="text-[10px] text-text-muted truncate mb-1">
+                  {sub.studentEmail || 'No email recorded'}
+                </div>
+                <div className="text-[10px] text-text-muted flex items-center gap-1">
                   <Clock size={10} />
                   {new Date(sub.submittedAt).toLocaleTimeString()}
-                </div>
-                <div className="flex items-center gap-2 mt-2">
-                  <Badge variant={sub.trigger === 'time_expired' ? 'danger' : 'success'}>
-                    {sub.trigger === 'time_expired' ? 'Timeout' : 'Manual'}
-                  </Badge>
                 </div>
               </button>
             ))}
             {submissions.length === 0 && (
-              <div className="p-6 text-center text-text-muted text-sm">
+              <div className="p-6 text-center text-text-muted text-sm italic">
                 No submissions yet.
               </div>
             )}
@@ -100,18 +150,18 @@ export default function InstructorSubmissions() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col bg-bg-editor">
+        <div className="flex-1 flex flex-col overflow-hidden">
           {activeSubmission ? (
-            <>
+            <div className="flex-1 flex flex-col overflow-hidden">
               {/* File Tabs */}
-              <div className="h-10 border-b border-border bg-bg-secondary flex overflow-x-auto">
+              <div className="h-10 border-b border-border bg-bg-secondary flex overflow-x-auto shrink-0">
                 {Object.keys(activeSubmission.files || {}).map(filename => (
                   <button
                     key={filename}
                     onClick={() => setActiveFile(filename)}
                     className={`px-4 h-full flex items-center gap-2 text-sm border-r border-border min-w-max transition-colors
                       ${activeFile === filename 
-                        ? 'bg-bg-editor text-text-primary border-t-2 border-t-accent-blue' 
+                        ? 'bg-bg-editor text-text-primary border-t-2 border-t-accent-blue font-medium' 
                         : 'text-text-muted hover:bg-bg-hover hover:text-text-primary border-t-2 border-t-transparent'
                       }
                     `}
@@ -122,33 +172,44 @@ export default function InstructorSubmissions() {
                 ))}
               </div>
               
-              {/* Editor */}
-              <div className="flex-1">
-                {activeFile && activeSubmission.files[activeFile] !== undefined ? (
-                   <Editor
-                     height="100%"
-                     theme="vs-dark"
-                     path={activeFile}
-                     value={activeSubmission.files[activeFile]}
-                     options={{
-                       readOnly: true,
-                       minimap: { enabled: true },
-                       fontSize: 14,
-                       wordWrap: 'on',
-                       padding: { top: 16 }
-                     }}
-                   />
-                ) : (
-                  <div className="h-full flex items-center justify-center text-text-muted">
-                    No file selected
+              {/* Editor Workspace */}
+              <div className="flex-1 relative flex flex-col overflow-hidden">
+                <div className="flex-1 relative">
+                  <Editor
+                    height="100%"
+                    theme="vs-dark"
+                    path={activeFile}
+                    value={activeSubmission.files[activeFile]}
+                    options={{
+                      readOnly: true,
+                      minimap: { enabled: true },
+                      fontSize: 14,
+                      wordWrap: 'on',
+                      padding: { top: 16 },
+                      automaticLayout: true
+                    }}
+                  />
+                </div>
+
+                {/* Force-visible Console Panel */}
+                {showConsole && (
+                  <div className="absolute bottom-0 left-0 right-0 h-96 bg-bg-editor border-t-4 border-accent-blue z-[100] shadow-[0_-20px_50px_rgba(0,0,0,0.5)] flex flex-col">
+                    <OutputPanel
+                      output={output}
+                      loading={running}
+                      stdin={stdin}
+                      setStdin={setStdin}
+                      onClear={() => setOutput(null)}
+                      onClose={() => setShowConsole(false)}
+                    />
                   </div>
                 )}
               </div>
-            </>
+            </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-text-muted gap-4">
-              <FileJson size={48} className="opacity-20" />
-              <p>Select a submission from the sidebar to view code.</p>
+              <FileJson size={48} className="opacity-10" />
+              <p className="italic">Select a submission to review.</p>
             </div>
           )}
         </div>

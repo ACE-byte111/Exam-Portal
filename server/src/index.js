@@ -16,6 +16,12 @@ const io = new Server(server, {
 app.use(cors());
 app.use(express.json());
 
+// Request Logger
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - Origin: ${req.get('origin')}`);
+  next();
+});
+
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/exams', require('./routes/exams'));

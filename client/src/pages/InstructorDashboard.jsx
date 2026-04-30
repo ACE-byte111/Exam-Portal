@@ -11,8 +11,9 @@ import Loader from '../components/Loader';
 import {
   LogOut, Plus, Play, Square, Users, Shield, Eye, Download,
   Clock, FileCode, BarChart3, AlertTriangle, Monitor,
-  ChevronDown, ChevronUp, Copy, ExternalLink, Settings
+  ChevronDown, ChevronUp, Copy, ExternalLink, Settings, Code2, Trash2
 } from 'lucide-react';
+import LiveCodeViewer from '../components/instructor/LiveCodeViewer';
 
 export default function InstructorDashboard() {
   const { user, logout } = useAuthStore();
@@ -23,6 +24,7 @@ export default function InstructorDashboard() {
   const [monitorExam, setMonitorExam] = useState(null);
   const [students, setStudents] = useState({});
   const [events, setEvents] = useState([]);
+  const [selectedStudent, setSelectedStudent] = useState(null);
 
   useEffect(() => { loadExams(); }, []);
 
@@ -36,6 +38,16 @@ export default function InstructorDashboard() {
     socket.on('student:fullscreen-violation', (data) => {
       setEvents(prev => [{ ...data, event: 'fullscreen violation' }, ...prev].slice(0, 100));
       toast.warning(`${data.studentName || data.studentId} left fullscreen!`);
+    });
+    socket.on('student:code-snapshot', (data) => {
+      setStudents(prev => ({
+        ...prev,
+        [data.studentId]: {
+          ...(prev[data.studentId] || {}),
+          ...data,
+          lastSync: new Date().toISOString()
+        }
+      }));
     });
     return () => {
       socket.off('student:status');
@@ -64,6 +76,15 @@ export default function InstructorDashboard() {
     try {
       await api.stopExam(id);
       toast.success('Exam stopped');
+      loadExams();
+    } catch (err) { toast.error(err.message); }
+  };
+  
+  const handleDeleteExam = async (id) => {
+    if (!window.confirm('Are you sure? This will delete the exam and ALL student submissions permanently.')) return;
+    try {
+      await api.deleteExam(id);
+      toast.success('Exam deleted');
       loadExams();
     } catch (err) { toast.error(err.message); }
   };
@@ -127,6 +148,7 @@ export default function InstructorDashboard() {
                 onStop={() => handleStopExam(exam.id)}
                 onMonitor={() => openMonitor(exam)}
                 onViewSubmissions={() => window.location.href = `/instructor/exam/${exam.id}/submissions`}
+                onDelete={() => handleDeleteExam(exam.id)}
               />
             ))}
             {exams.length === 0 && (
@@ -175,6 +197,14 @@ export default function InstructorDashboard() {
                         {s.violations > 0 && (
                           <Badge variant="danger">{s.violations} violations</Badge>
                         )}
+                        <Button 
+                          size="xs" 
+                          variant="ghost" 
+                          icon={Code2}
+                          onClick={() => setSelectedStudent(s)}
+                        >
+                          View Code
+                        </Button>
                         <Badge variant={s.isFullscreen ? 'active' : 'danger'}>
                           {s.isFullscreen ? 'Fullscreen' : 'Not Fullscreen'}
                         </Badge>
@@ -217,11 +247,17 @@ export default function InstructorDashboard() {
         onClose={() => setShowCreate(false)}
         onCreated={() => { setShowCreate(false); loadExams(); }}
       />
+
+      <LiveCodeViewer
+        student={selectedStudent ? students[selectedStudent.studentId] : null}
+        isOpen={!!selectedStudent}
+        onClose={() => setSelectedStudent(null)}
+      />
     </div>
   );
 }
 
-function ExamRow({ exam, onStart, onStop, onMonitor, onViewSubmissions }) {
+function ExamRow({ exam, onStart, onStop, onMonitor, onViewSubmissions, onDelete }) {
   const [expanded, setExpanded] = useState(false);
 
   const statusColor = {
@@ -257,6 +293,15 @@ function ExamRow({ exam, onStart, onStop, onMonitor, onViewSubmissions }) {
           )}
           {exam.status === 'ended' && (
             <Button size="sm" variant="outline" icon={FileCode} onClick={onViewSubmissions}>Submissions</Button>
+          )}
+          {exam.status !== 'active' && (
+            <button 
+              onClick={onDelete}
+              className="p-2 text-text-muted hover:text-accent-red transition-colors"
+              title="Delete Exam"
+            >
+              <Trash2 size={18} />
+            </button>
           )}
         </div>
       </div>

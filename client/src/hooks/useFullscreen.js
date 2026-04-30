@@ -7,9 +7,9 @@ export default function useFullscreen({ enabled = true, onAutoSubmit, examId, st
   const [showInitialEntry, setShowInitialEntry] = useState(false);
   const [countdown, setCountdown] = useState(10);
   const [violations, setViolations] = useState(0);
-  const countdownRef = useRef(null);
-  const enabledRef = useRef(enabled);
-  enabledRef.current = enabled;
+  const violationsRef = useRef(0);
+  
+  const timerRef = useRef(null);
   const initialCheckDone = useRef(false);
 
   const enterFullscreen = useCallback(async () => {
@@ -19,11 +19,6 @@ export default function useFullscreen({ enabled = true, onAutoSubmit, examId, st
       }
       setShowWarning(false);
       setShowInitialEntry(false);
-      setCountdown(10);
-      if (countdownRef.current) {
-        clearInterval(countdownRef.current);
-        countdownRef.current = null;
-      }
     } catch (err) {
       console.warn('Fullscreen request failed:', err);
     }
@@ -33,10 +28,41 @@ export default function useFullscreen({ enabled = true, onAutoSubmit, examId, st
     enterFullscreen();
   }, [enterFullscreen]);
 
+  // Handle countdown logic
+  useEffect(() => {
+    if (showWarning && !timerRef.current) {
+      setCountdown(10);
+      timerRef.current = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+            if (onAutoSubmit) onAutoSubmit();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    if (!showWarning && timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+      setCountdown(10);
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [showWarning, onAutoSubmit]);
+
+  // Handle native fullscreen changes
   useEffect(() => {
     if (!enabled) return;
 
-    // Check if we start outside of fullscreen
     if (!initialCheckDone.current) {
       initialCheckDone.current = true;
       if (!document.fullscreenElement) {
@@ -50,68 +76,85 @@ export default function useFullscreen({ enabled = true, onAutoSubmit, examId, st
       const isFS = !!document.fullscreenElement;
       setIsFullscreen(isFS);
 
-      if (!isFS && enabledRef.current) {
-        // Left fullscreen - show warning and start countdown
-        setShowInitialEntry(false);
-        setShowWarning(true);
-        setCountdown(10);
-        setViolations(prev => prev + 1);
+      if (!isFS) {
+        // Only trigger if we aren't already showing the initial entry screen
+        if (!showInitialEntry) {
+          violationsRef.current += 1;
+          const currentViolations = violationsRef.current;
+          setViolations(currentViolations);
+          
+          socket.emit('student:fullscreen-violation', {
+            examId,
+            studentId,
+            violationCount: currentViolations,
+            timestamp: new Date().toISOString(),
+          });
 
-        socket.emit('student:fullscreen-violation', {
+          if (currentViolations >= 3) {
+            if (onAutoSubmit) onAutoSubmit();
+          } else {
+            setShowWarning(true);
+          }
+        }
+      } else {
+        setShowWarning(false);
+        setShowInitialEntry(false);
+      }
+    };
+
+    const handleBlur = () => {
+      if (enabled && !showInitialEntry && !document.hidden) {
+        violationsRef.current += 1;
+        const currentViolations = violationsRef.current;
+        setViolations(currentViolations);
+        
+        socket.emit('student:anti-cheat-event', {
           examId,
           studentId,
+          event: 'window_blur_proctored',
+          violationCount: currentViolations,
           timestamp: new Date().toISOString(),
         });
 
-        if (!countdownRef.current) {
-          countdownRef.current = setInterval(() => {
-            setCountdown(prev => {
-              if (prev <= 1) {
-                clearInterval(countdownRef.current);
-                countdownRef.current = null;
-                setShowWarning(false);
-                if (onAutoSubmit) onAutoSubmit();
-                return 0;
-              }
-              return prev - 1;
-            });
-          }, 1000);
-        }
-      } else if (isFS) {
-        // Returned to fullscreen
-        setShowWarning(false);
-        setShowInitialEntry(false);
-        setCountdown(10);
-        if (countdownRef.current) {
-          clearInterval(countdownRef.current);
-          countdownRef.current = null;
+        if (currentViolations >= 3) {
+          if (onAutoSubmit) onAutoSubmit();
+        } else {
+          setShowWarning(true);
         }
       }
     };
 
-    // Listen to native F11 keys and prevent default to force DOM fullscreen
+    const handleFocus = () => {
+      // If they return focus while in FS, we might clear warning
+      if (document.fullscreenElement) {
+        setShowWarning(false);
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    window.addEventListener('blur', handleBlur);
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      window.removeEventListener('blur', handleBlur);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [enabled, examId, studentId, showInitialEntry]);
+
+  // Block F11
+  useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'F11') {
         e.preventDefault();
         if (!document.fullscreenElement) {
           enterFullscreen();
-        } else {
-          document.exitFullscreen().catch(() => {});
         }
       }
     };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('keydown', handleKeyDown);
-      if (countdownRef.current) {
-        clearInterval(countdownRef.current);
-      }
-    };
-  }, [enabled, examId, studentId, onAutoSubmit, enterFullscreen]);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [enterFullscreen]);
 
   return {
     isFullscreen,

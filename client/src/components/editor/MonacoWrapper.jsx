@@ -9,9 +9,54 @@ export default function MonacoWrapper() {
   } = useEditorStore();
   const editorRef = useRef(null);
 
-  const handleEditorMount = useCallback((editor) => {
+  const handleEditorMount = useCallback((editor, monaco) => {
     editorRef.current = editor;
     editor.focus();
+
+    // Overwrite the 'Copy' command in Monaco
+    editor.addAction({
+      id: 'internal-copy',
+      label: 'Copy (Internal)',
+      keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyC],
+      run: (ed) => {
+        const selection = ed.getSelection();
+        const text = ed.getModel().getValueInRange(selection);
+        if (text) {
+          useEditorStore.setState({ internalClipboard: text });
+          // Poison the system clipboard
+          navigator.clipboard.writeText('[SECURITY ALERT] This activity is recorded.').catch(() => {});
+        }
+        return null;
+      }
+    });
+
+    // Overwrite the 'Paste' command in Monaco
+    editor.addAction({
+      id: 'internal-paste',
+      label: 'Paste (Internal)',
+      keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV],
+      run: (ed) => {
+        const text = useEditorStore.getState().internalClipboard;
+        if (text) {
+          const selection = ed.getSelection();
+          const range = new monaco.Range(
+            selection.startLineNumber,
+            selection.startColumn,
+            selection.endLineNumber,
+            selection.endColumn
+          );
+          ed.executeEdits('internal-paste', [{ range, text, forceMoveMarkers: true }]);
+        }
+        return null;
+      }
+    });
+
+    // Block right-click context menu copy/paste by removing them or intercepting
+    // (Simpler: just block the context menu entirely for the editor)
+    editor.onContextMenu((e) => {
+      e.event.preventDefault();
+      e.event.stopPropagation();
+    });
   }, []);
 
   const handleChange = useCallback((value) => {
@@ -59,6 +104,7 @@ export default function MonacoWrapper() {
         smoothScrolling: true,
         padding: { top: 12 },
         readOnly: locked || submitted,
+        contextmenu: false, // NEW: Explicitly disable Monaco's context menu
         bracketPairColorization: { enabled: true },
         guides: {
           bracketPairs: true,
