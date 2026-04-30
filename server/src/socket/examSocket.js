@@ -77,6 +77,19 @@ module.exports = (io) => {
       });
     });
 
+    // Live Code Update
+    socket.on('student:code-update', (data) => {
+      const { examId, studentId, files, activeFile } = data;
+      // Broadcast to instructors monitoring this exam
+      io.to(`monitor_${examId}`).emit('student:code-snapshot', {
+        studentId,
+        studentName: socket.user.name,
+        files,
+        activeFile,
+        timestamp: new Date().toISOString()
+      });
+    });
+
     // Instructor starts monitoring
     socket.on('instructor:monitor', (data) => {
       if (socket.user.role !== 'instructor') return;

@@ -27,6 +27,10 @@ const firestoreService = {
     if (snapshot.empty) return null;
     return snapshot.docs[0].data();
   },
+  getUserById: async (id) => {
+    const doc = await db.collection('users').doc(id).get();
+    return doc.exists ? doc.data() : null;
+  },
   createUser: async (userData) => {
     await db.collection('users').doc(userData.id).set(userData);
     return userData;
@@ -54,6 +58,15 @@ const firestoreService = {
       return updated.data();
     }
     return null;
+  },
+  deleteExam: async (id) => {
+    await db.collection('exams').doc(id).delete();
+    // Also cleanup related submissions (optional but recommended)
+    const subs = await db.collection('submissions').where('examId', '==', id).get();
+    const batch = db.batch();
+    subs.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+    return true;
   },
 
   // Autosaves (Using a resilient sub-collection pattern)
@@ -92,7 +105,22 @@ const firestoreService = {
   },
   getSubmissionsForExam: async (examId) => {
     const snapshot = await db.collection('submissions').where('examId', '==', examId).get();
-    return snapshot.docs.map(doc => doc.data());
+    const subs = snapshot.docs.map(doc => doc.data());
+    
+    // Join with user data for each submission if missing
+    return Promise.all(subs.map(async sub => {
+      if (sub.studentName && sub.studentEmail) return sub;
+      
+      const user = await firestoreService.getUserById(sub.studentId);
+      if (user) {
+        return {
+          ...sub,
+          studentName: user.name,
+          studentEmail: user.email
+        };
+      }
+      return sub;
+    }));
   },
   getSubmission: async (id) => {
     const doc = await db.collection('submissions').doc(id).get();

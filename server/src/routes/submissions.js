@@ -20,6 +20,8 @@ router.post('/', requireAuth, async (req, res) => {
     id: crypto.randomUUID(),
     examId,
     studentId,
+    studentName: req.user.name,
+    studentEmail: req.user.email,
     files,
     trigger,
     autosaveCount: saveCount,

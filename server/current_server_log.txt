@@ -1,0 +1,123 @@
+
+> server@1.0.0 start
+> node src/index.js
+
+◇ injected env (3) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+Server listening on port 3001
+Socket connected: asadullahsulehri110@gmail.com (Oc3Vr8JfXdLkeQd4AAAC)
+Socket connected: gaminggrip110@gmail.com (DiuMpz8iNfonyJD8AAAD)
+Socket disconnected: gaminggrip110@gmail.com
+Socket connected: gaminggrip110@gmail.com (LQ6vppgPhKYU0jw3AAAF)
+Socket disconnected: asadullahsulehri110@gmail.com
+Socket connected: asadullahsulehri110@gmail.com (CsN0f5BU3LqK0_PyAAAH)
+[AUDIT] 28c27eaf-aafa-4f42-b3b3-7615e4f32997/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | exam_joined | {}
+[AUDIT] 28c27eaf-aafa-4f42-b3b3-7615e4f32997/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | autosave | { timestamp: '2026-04-30T15:25:06.133Z' }
+[AUDIT] 28c27eaf-aafa-4f42-b3b3-7615e4f32997/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | autosave | { timestamp: '2026-04-30T15:25:09.125Z' }
+[AUDIT] 28c27eaf-aafa-4f42-b3b3-7615e4f32997/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | autosave | { timestamp: '2026-04-30T15:25:12.124Z' }
+[AUDIT] 28c27eaf-aafa-4f42-b3b3-7615e4f32997/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | autosave | { timestamp: '2026-04-30T15:25:15.138Z' }
+[Compiler] Execution failed: Error: Code execution engine is currently unavailable.
+    at /home/asad/CODING/Portal/server/src/routes/compiler.js:51:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+[Compiler] Execution failed: Error: Code execution engine is currently unavailable.
+    at /home/asad/CODING/Portal/server/src/routes/compiler.js:51:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+[AUDIT] 28c27eaf-aafa-4f42-b3b3-7615e4f32997/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | autosave | { timestamp: '2026-04-30T15:25:30.124Z' }
+[Compiler] Execution failed: Error: Code execution engine is currently unavailable.
+    at /home/asad/CODING/Portal/server/src/routes/compiler.js:51:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+[AUDIT] 28c27eaf-aafa-4f42-b3b3-7615e4f32997/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | autosave | { timestamp: '2026-04-30T15:25:39.124Z' }
+[AUDIT] 28c27eaf-aafa-4f42-b3b3-7615e4f32997/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | submitted | { trigger: 'manual' }
+[AUDIT] 28c27eaf-aafa-4f42-b3b3-7615e4f32997/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | exam_joined | {}
+[Compiler] Execution failed: Error: Code execution engine is currently unavailable.
+    at /home/asad/CODING/Portal/server/src/routes/compiler.js:51:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+[AUDIT] 28c27eaf-aafa-4f42-b3b3-7615e4f32997/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | copy_attempt | { text: '' }
+[AUDIT] 28c27eaf-aafa-4f42-b3b3-7615e4f32997/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | submitted | { trigger: 'manual' }
+Instructor monitoring exam 28c27eaf-aafa-4f42-b3b3-7615e4f32997
+Instructor monitoring exam 28c27eaf-aafa-4f42-b3b3-7615e4f32997
+Instructor monitoring exam 28c27eaf-aafa-4f42-b3b3-7615e4f32997
+Instructor monitoring exam 28c27eaf-aafa-4f42-b3b3-7615e4f32997
+Instructor monitoring exam 28c27eaf-aafa-4f42-b3b3-7615e4f32997
+Instructor monitoring exam 28c27eaf-aafa-4f42-b3b3-7615e4f32997
+Socket disconnected: gaminggrip110@gmail.com
+Socket connected: gaminggrip110@gmail.com (1iCnHYDebJ5gfmGjAAAJ)
+Socket disconnected: gaminggrip110@gmail.com
+Socket connected: gaminggrip110@gmail.com (rn4-fib4JZCVaRzDAAAL)
+Socket disconnected: asadullahsulehri110@gmail.com
+Socket connected: asadullahsulehri110@gmail.com (tUMex9gg5dJWK0g4AAAN)
+[AUDIT] b15e0b0c-4d7d-4ae4-a762-ed101e82d4bd/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | exam_joined | {}
+[AUDIT] b15e0b0c-4d7d-4ae4-a762-ed101e82d4bd/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | autosave | { timestamp: '2026-04-30T15:32:05.763Z' }
+[AUDIT] b15e0b0c-4d7d-4ae4-a762-ed101e82d4bd/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | autosave | { timestamp: '2026-04-30T15:32:08.761Z' }
+[AUDIT] b15e0b0c-4d7d-4ae4-a762-ed101e82d4bd/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | autosave | { timestamp: '2026-04-30T15:32:11.765Z' }
+[AUDIT] b15e0b0c-4d7d-4ae4-a762-ed101e82d4bd/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | autosave | { timestamp: '2026-04-30T15:32:14.762Z' }
+[AUDIT] b15e0b0c-4d7d-4ae4-a762-ed101e82d4bd/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | autosave | { timestamp: '2026-04-30T15:32:17.765Z' }
+[Compiler] Execution failed: Error: Code execution engine is currently unavailable.
+    at /home/asad/CODING/Portal/server/src/routes/compiler.js:51:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+[AUDIT] b15e0b0c-4d7d-4ae4-a762-ed101e82d4bd/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | copy_attempt | { text: '' }
+[AUDIT] b15e0b0c-4d7d-4ae4-a762-ed101e82d4bd/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | submitted | { trigger: 'manual' }
+Socket disconnected: asadullahsulehri110@gmail.com
+Socket connected: asadullahsulehri110@gmail.com (2je9bCzN3HBhb9B_AAAP)
+Socket disconnected: gaminggrip110@gmail.com
+Socket connected: gaminggrip110@gmail.com (FU8Kzlx2TQ3S1nJWAAAR)
+Socket disconnected: gaminggrip110@gmail.com
+[AUDIT] b15e0b0c-4d7d-4ae4-a762-ed101e82d4bd/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | exam_joined | {}
+Socket connected: gaminggrip110@gmail.com (VZdPHk6dOA8q_LP2AAAT)
+[Compiler] Execution failed: Error: Code execution engine is currently unavailable.
+    at /home/asad/CODING/Portal/server/src/routes/compiler.js:51:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+[AUDIT] b15e0b0c-4d7d-4ae4-a762-ed101e82d4bd/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | fullscreen_exit | { timestamp: '2026-04-30T15:32:59.811Z' }
+[AUDIT] b15e0b0c-4d7d-4ae4-a762-ed101e82d4bd/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | submitted | { trigger: 'manual' }
+[AUDIT] b15e0b0c-4d7d-4ae4-a762-ed101e82d4bd/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | fullscreen_exit | { timestamp: '2026-04-30T15:33:05.314Z' }
+Socket disconnected: gaminggrip110@gmail.com
+Socket connected: gaminggrip110@gmail.com (ApUfy3nGxaE6NU4BAAAV)
+Socket disconnected: asadullahsulehri110@gmail.com
+Socket connected: asadullahsulehri110@gmail.com (97fIVBy49oG49qUSAAAX)
+Socket disconnected: asadullahsulehri110@gmail.com
+Socket connected: asadullahsulehri110@gmail.com (oeFtHRddueE-UiT6AAAZ)
+Socket disconnected: asadullahsulehri110@gmail.com
+Socket connected: asadullahsulehri110@gmail.com (V1jeFxKvN5H-X8sBAAAb)
+Socket disconnected: asadullahsulehri110@gmail.com
+Socket connected: asadullahsulehri110@gmail.com (jSyrGbTeEubdq37JAAAd)
+[AUDIT] fff76866-4080-4a7a-97fd-a251f1dd4f28/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | exam_joined | {}
+[Compiler] Execution failed: Error: Code execution engine is currently unavailable.
+    at /home/asad/CODING/Portal/server/src/routes/compiler.js:51:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+[AUDIT] fff76866-4080-4a7a-97fd-a251f1dd4f28/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | submitted | { trigger: 'manual' }
+Socket disconnected: gaminggrip110@gmail.com
+Socket connected: gaminggrip110@gmail.com (riSd_9Jdyk2503zgAAAf)
+Socket disconnected: gaminggrip110@gmail.com
+Socket disconnected: asadullahsulehri110@gmail.com
+Socket connected: gaminggrip110@gmail.com (vy9DYgJwILSGEGxiAAAh)
+Socket connected: asadullahsulehri110@gmail.com (n8YwldO-qQBJNjMqAAAj)
+Socket disconnected: asadullahsulehri110@gmail.com
+Socket connected: asadullahsulehri110@gmail.com (aqepcfvfVZkXyPu7AAAl)
+[AUDIT] ec2da4e7-c7ab-4ffb-89ea-ba4e5fd42b3e/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | exam_joined | {}
+[Compiler] Execution failed: Error: Code execution engine is currently unavailable.
+    at /home/asad/CODING/Portal/server/src/routes/compiler.js:51:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+[Compiler] Execution failed: Error: Code execution engine is currently unavailable.
+    at /home/asad/CODING/Portal/server/src/routes/compiler.js:51:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+[AUDIT] ec2da4e7-c7ab-4ffb-89ea-ba4e5fd42b3e/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | submitted | { trigger: 'manual' }
+Socket disconnected: asadullahsulehri110@gmail.com
+Socket disconnected: gaminggrip110@gmail.com
+[OTP] Dispatched real email to gaminggrip110@gmail.com
+Socket connected: gaminggrip110@gmail.com (t1s8SrgXEZpivpoTAAAn)
+[OTP] Dispatched real email to asadullahsulehri110@gmail.com
+Socket connected: asadullahsulehri110@gmail.com (Wz6KDyh9yJW4fC9tAAAp)
+Socket disconnected: asadullahsulehri110@gmail.com
+Socket connected: asadullahsulehri110@gmail.com (_3rPo147jZWJpxp0AAAr)
+[AUDIT] 2b33c1b4-fc36-467a-bae1-e5be142ce384/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | exam_joined | {}
+[Compiler] Execution failed: Error: Code execution engine is currently unavailable.
+    at /home/asad/CODING/Portal/server/src/routes/compiler.js:51:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+[Compiler] Execution failed: Error: Code execution engine is currently unavailable.
+    at /home/asad/CODING/Portal/server/src/routes/compiler.js:51:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+[AUDIT] 2b33c1b4-fc36-467a-bae1-e5be142ce384/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | window_blur | {}
+[AUDIT] 2b33c1b4-fc36-467a-bae1-e5be142ce384/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | tab_hidden | {}
+[AUDIT] 2b33c1b4-fc36-467a-bae1-e5be142ce384/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | window_focus | {}
+[AUDIT] 2b33c1b4-fc36-467a-bae1-e5be142ce384/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | tab_visible | {}
+[AUDIT] 2b33c1b4-fc36-467a-bae1-e5be142ce384/50b4e42c-493d-40b8-bed9-010d32dcd9b3 | submitted | { trigger: 'manual' }
+Killed

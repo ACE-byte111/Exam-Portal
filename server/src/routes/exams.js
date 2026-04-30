@@ -27,14 +27,13 @@ router.post('/', requireAuth, requireInstructor, async (req, res) => {
     try {
       const repoInfo = githubService.parseGitHubUrl(repoTemplate);
       if (repoInfo) {
-        console.log(`[GitHub] Fetching template from ${repoInfo.owner}/${repoInfo.repo}...`);
-        const githubFiles = await githubService.fetchRepoContents(repoInfo.owner, repoInfo.repo);
+        console.log(`[GitHub] Fetching template from ${repoInfo.owner}/${repoInfo.repo}${repoInfo.path ? ' path: ' + repoInfo.path : ''}...`);
+        const githubFiles = await githubService.fetchRepoContents(repoInfo.owner, repoInfo.repo, repoInfo.path);
         finalStarterFiles = { ...githubFiles, ...finalStarterFiles }; // Manual files take precedence
         console.log(`[GitHub] Successfully fetched ${Object.keys(githubFiles).length} files.`);
       }
     } catch (err) {
       console.error(`[GitHub] Failed to fetch repo:`, err.message);
-      // We don't fail the whole creation, but we could return a warning
     }
   }
 
@@ -97,6 +96,13 @@ router.post('/:id/join', requireAuth, async (req, res) => {
 
   await auditLog.logEvent(exam.id, req.user.id, 'exam_joined');
   res.json({ message: 'Joined successfully' });
+});
+
+// Delete exam
+router.delete('/:id', requireAuth, requireInstructor, async (req, res) => {
+  console.log(`[Exam] Deleting exam: ${req.params.id} (Requested by: ${req.user.email})`);
+  await firestore.deleteExam(req.params.id);
+  res.json({ message: 'Exam and all submissions deleted successfully' });
 });
 
 module.exports = router;

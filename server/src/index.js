@@ -21,9 +21,17 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/exams', require('./routes/exams'));
 app.use('/api/autosave', require('./routes/autosave'));
 app.use('/api/submissions', require('./routes/submissions'));
+app.use('/api/compiler', require('./routes/compiler'));
 
 // Socket
 require('./socket/examSocket')(io);
+
+// Background Services
+try {
+  require('./services/cleanupService').initCleanup();
+} catch (err) {
+  console.error('[Startup] Failed to initialize cleanup service:', err);
+}
 
 // Basic health check
 app.get('/', (req, res) => res.send('Portal API is running.'));
