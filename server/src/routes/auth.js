@@ -2,12 +2,18 @@ const express = require('express');
 const crypto = require('crypto');
 const firestore = require('../services/firestoreService');
 const nodemailer = require('nodemailer');
-const { Resend } = require('resend');
+const SibApiV3Sdk = require('@getbrevo/brevo');
 const dns = require('dns');
 const router = express.Router();
 
-// Initialize Resend if key exists
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+// Initialize Brevo if key exists
+let brevoInstance = null;
+if (process.env.BREVO_API_KEY) {
+  brevoInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+  const defaultClient = SibApiV3Sdk.ApiClient.instance;
+  const apiKey = defaultClient.authentications['api-key'];
+  apiKey.apiKey = process.env.BREVO_API_KEY;
+}
 
 // Force IPv4 for Render compatibility (fixes ENETUNREACH on IPv6 for SMTP backup)
 if (dns.setDefaultResultOrder) {
@@ -48,15 +54,15 @@ router.post('/send-otp', async (req, res) => {
   
   otpCache.set(email, { otp, expiresAt: Date.now() + 5 * 60 * 1000 });
 
-  // 1. Try Resend First (Best for Production/Render)
-  if (resend) {
+  // 1. Try Brevo First (Best for Production/Render)
+  if (brevoInstance) {
     try {
-      console.log(`[OTP] Sending via Resend API to ${email}...`);
-      await resend.emails.send({
-        from: 'Exam Portal <onboarding@resend.dev>', // You can change this once you verify a domain
-        to: email,
+      console.log(`[OTP] Sending via Brevo API to ${email}...`);
+      await brevoInstance.sendTransacEmail({
+        sender: { email: process.env.EMAIL_USER || 'support@examportal.com', name: 'Exam Portal' },
+        to: [{ email: email }],
         subject: 'Your Exam Portal OTP',
-        html: `
+        htmlContent: `
           <div style="font-family: sans-serif; padding: 20px;">
             <h2>Exam Portal Security</h2>
             <p>Your One-Time Password to log in is:</p>
@@ -65,10 +71,10 @@ router.post('/send-otp', async (req, res) => {
           </div>
         `
       });
-      console.log(`[OTP] Success via Resend!`);
+      console.log(`[OTP] Success via Brevo!`);
       return res.json({ message: 'OTP sent successfully.' });
     } catch (err) {
-      console.error(`[OTP] Resend Error:`, err.message);
+      console.error(`[OTP] Brevo Error:`, err.response ? err.response.body : err.message);
     }
   }
 
