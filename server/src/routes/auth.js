@@ -2,18 +2,8 @@ const express = require('express');
 const crypto = require('crypto');
 const firestore = require('../services/firestoreService');
 const nodemailer = require('nodemailer');
-const SibApiV3Sdk = require('@getbrevo/brevo');
 const dns = require('dns');
 const router = express.Router();
-
-// Initialize Brevo if key exists
-let brevoInstance = null;
-if (process.env.BREVO_API_KEY) {
-  brevoInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-  const defaultClient = SibApiV3Sdk.ApiClient.instance;
-  const apiKey = defaultClient.authentications['api-key'];
-  apiKey.apiKey = process.env.BREVO_API_KEY;
-}
 
 // Force IPv4 for Render compatibility (fixes ENETUNREACH on IPv6 for SMTP backup)
 if (dns.setDefaultResultOrder) {
@@ -54,27 +44,41 @@ router.post('/send-otp', async (req, res) => {
   
   otpCache.set(email, { otp, expiresAt: Date.now() + 5 * 60 * 1000 });
 
-  // 1. Try Brevo First (Best for Production/Render)
-  if (brevoInstance) {
+  // 1. Try Brevo First (REST API - Most Reliable)
+  if (process.env.BREVO_API_KEY) {
     try {
-      console.log(`[OTP] Sending via Brevo API to ${email}...`);
-      await brevoInstance.sendTransacEmail({
-        sender: { email: process.env.EMAIL_USER || 'support@examportal.com', name: 'Exam Portal' },
-        to: [{ email: email }],
-        subject: 'Your Exam Portal OTP',
-        htmlContent: `
-          <div style="font-family: sans-serif; padding: 20px;">
-            <h2>Exam Portal Security</h2>
-            <p>Your One-Time Password to log in is:</p>
-            <h1 style="color: #4285F4; tracking: 2px;">${otp}</h1>
-            <p style="color: #666; font-size: 12px;">This code will expire in 5 minutes.</p>
-          </div>
-        `
+      console.log(`[OTP] Sending via Brevo REST API to ${email}...`);
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'api-key': process.env.BREVO_API_KEY,
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          sender: { email: process.env.EMAIL_USER || 'support@examportal.com', name: 'Exam Portal' },
+          to: [{ email: email }],
+          subject: 'Your Exam Portal OTP',
+          htmlContent: `
+            <div style="font-family: sans-serif; padding: 20px;">
+              <h2>Exam Portal Security</h2>
+              <p>Your One-Time Password to log in is:</p>
+              <h1 style="color: #4285F4; tracking: 2px;">${otp}</h1>
+              <p style="color: #666; font-size: 12px;">This code will expire in 5 minutes.</p>
+            </div>
+          `
+        })
       });
-      console.log(`[OTP] Success via Brevo!`);
-      return res.json({ message: 'OTP sent successfully.' });
+
+      if (response.ok) {
+        console.log(`[OTP] Success via Brevo API!`);
+        return res.json({ message: 'OTP sent successfully.' });
+      } else {
+        const errorData = await response.json();
+        console.error(`[OTP] Brevo API Error:`, errorData);
+      }
     } catch (err) {
-      console.error(`[OTP] Brevo Error:`, err.response ? err.response.body : err.message);
+      console.error(`[OTP] Brevo Connection Error:`, err.message);
     }
   }
 
